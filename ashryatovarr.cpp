@@ -234,18 +234,169 @@ void ashryatovarr::lab6()
  */
 void ashryatovarr::lab7()
 {
+		
+	double *xrez = new double[N];
+
+    for (int i = 0; i<N; i++)
+        xrez[i] = 0;
+
+    double Del, s, sAbs;
+    double eps = 1.e-10;
+    double *K = new double[N];
+    double *L = new double[N];
+    double *M = new double[N];
+
+    do
+    {
+        for (int i = 0; i < N; i++)
+        {
+            K[i] = 0;
+            for (int j = 0; j < N; j++)
+                K[i] += A[i][j] * xrez[j];
+        }
+
+        for (int i = 0; i < N; i++)
+            L[i] = K[i] - b[i];
+
+
+        for (int i = 0; i < N; i++)
+        {
+            K[i] = 0;
+            for (int j = 0; j < N; j++)
+                K[i] += A[i][j] * L[j];
+        }
+
+
+        for (int i = 0; i < N; i++)
+        {
+            M[i] = 0;
+            for (int j = 0; j < N; j++)
+                M[i] += A[i][j] * K[j];
+        }
+
+        s = 0;
+        sAbs = 0;
+
+        for (int i = 0; i < N; i++)
+        {
+            s += K[i] * L[i];
+            sAbs += M[i] * K[i];
+        }
+        if (s == sAbs)
+            s = 1;
+        else
+            s = s / sAbs;
+
+        for (int i = 0; i < N; i++)
+            x[i] = xrez[i] - s*L[i];
+
+        Del = abs(x[0] - xrez[0]);
+
+        for (int i = 0; i < N; i++)
+        {
+            if (abs(x[i] - xrez[i])>Del)
+                Del = abs(x[i] - xrez[i]);
+            xrez[i] = x[i];
+        }
+    }
+    while (eps < Del);
 
 }
 
 
 void ashryatovarr::lab8()
 {
+	double eps = 1e-20;
+	double** B = new double* [N];
+	for (int i = 0; i < N; i++) {
+		B[i] = new double[N];
+	}
 
+	while (true) {
+		double norm = 0;
+		int imax = 0;
+		int jmax = 1;
+		for (int i = 0; i < N; i++) {
+			for (int j = i + 1; j < N; j++) {
+				if (abs(A[i][j]) > abs(A[imax][jmax])) {
+					imax = i;
+					jmax = j;
+				}
+				norm += A[i][j] * A[i][j];
+			}
+		}
+
+		if (sqrt(norm) < eps) {
+			break;
+		}
+
+		double fi = 0.5 * atan(2 * A[imax][jmax] / (A[imax][imax] - A[jmax][jmax]));
+
+		for (int i = 0; i < N; i++) {
+			B[i][imax] = A[i][imax] * cos(fi) + A[i][jmax] * sin(fi);
+			B[i][jmax] = A[i][jmax] * cos(fi) - A[i][imax] * sin(fi);
+		}
+
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < N; j++) {
+				if (j != imax && j != jmax) {
+					B[i][j] = A[i][j];
+				}
+			}
+		}
+
+		for (int j = 0; j < N; j++) {
+			A[imax][j] = B[imax][j] * cos(fi) + B[jmax][j] * sin(fi);
+			A[jmax][j] = B[jmax][j] * cos(fi) - B[imax][j] * sin(fi);
+		}
+
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < N; j++) {
+				if (i != imax && i != jmax) {
+					A[i][j] = B[i][j];
+				}
+			}
+		}
+	}
+
+	for (int i = 0; i < N; i++) {
+		x[i] = A[i][i];
+	}
 }
 
 
 void ashryatovarr::lab9()
 {
+	
+  int n = N;
+  double *y = new double[n];
+  double *y_next = new double[n];
+  double eps =1e-2;
+  double lyambda = 1;
+  double lyambda_next = 0;
+
+  for(int i = 0; i<n; i++)
+    y[i] = b[i];
+
+  do{
+  for(int i=0; i<n; i++){
+      for(int j=0; j<n; j++){
+        y_next[i] += A[i][j]*y[j];
+      }
+  }
+  lyambda = lyambda_next;
+
+  for(int i=0; i<n; i++){
+    if(y[i]!= 0 && y_next[i] != 0){
+      lyambda_next = y_next[i]/y[i];
+      break;
+    }
+  }
+  for (int i=0; i<n; i++)
+   	y[i]=y_next[i];
+}while(fabs(lyambda_next - lyambda)>eps);
+
+cout<<"Result: "<<lyambda_next << endl;
 
 }
 

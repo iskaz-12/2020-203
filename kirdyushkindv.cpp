@@ -250,19 +250,188 @@ void kirdyushkindv::lab6()
  */
 void kirdyushkindv::lab7()
 {
+    double const eps = 1e-10;
+    double r0[N], z0[N], Az[N];
+    double err;
 
+    for (int i = 0; i < N; i++) {
+        double Ax = 0;
+        for (int j = 0; j < N; j++) {
+            Ax += A[i][j] * x[j];
+        }
+
+        r0[i] = b[i] - Ax;
+        z0[i] = r0[i];
+    }
+
+    do {
+        for (int i = 0; i < N; i++) {
+            Az[i] = 0;
+            for (int j = 0; j < N; j++) {
+                Az[i] += A[i][j] * z0[j];
+            }
+        }
+
+        double sum1 = 0;
+        double sum2 = 0;
+
+        for (int i = 0; i < N; i++) {
+            sum1 += r0[i] * r0[i];
+            sum2 += Az[i] * z0[i];
+        }
+
+        double alpha = sum1 / sum2;
+        err = 0;
+
+        for (int i = 0; i < N; i++) {
+            double temp = x[i];
+            x[i] = x[i] + alpha * z0[i];
+            if (abs(temp - x[i]) > err) {
+                err = abs(temp - x[i]);
+            }
+        }
+
+        sum1 = 0;
+        sum2 = 0;
+
+        for (int i = 0; i < N; i++) {
+            sum2 += r0[i] * r0[i];
+            r0[i] = r0[i] - alpha * Az[i];
+
+            sum1 += r0[i] * r0[i];
+        }
+
+        double beta = sum1 / sum2;
+
+        for (int i = 0; i < N; i++) {
+            z0[i] = r0[i] + beta * z0[i];
+        }
+    } while (err > eps);
 }
 
 
 void kirdyushkindv::lab8()
 {
+double eps = 1e-20;
+	double** B = new double* [N];
+	for (int i = 0; i < N; i++) {
+		B[i] = new double[N];
+	}
 
+	while (true) {
+		double norm = 0;
+		int imax = 0;
+		int jmax = 1;
+		for (int i = 0; i < N; i++) {
+			for (int j = i + 1; j < N; j++) {
+				if (abs(A[i][j]) > abs(A[imax][jmax])) {
+					imax = i;
+					jmax = j;
+				}
+				norm += A[i][j] * A[i][j];
+			}
+		}
+
+		if (sqrt(norm) < eps) {
+			break;
+		}
+
+		double fi = 0.5 * atan(2 * A[imax][jmax] / (A[imax][imax] - A[jmax][jmax]));
+
+		for (int i = 0; i < N; i++) {
+			B[i][imax] = A[i][imax] * cos(fi) + A[i][jmax] * sin(fi);
+			B[i][jmax] = A[i][jmax] * cos(fi) - A[i][imax] * sin(fi);
+		}
+
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < N; j++) {
+				if (j != imax && j != jmax) {
+					B[i][j] = A[i][j];
+				}
+			}
+		}
+
+		for (int j = 0; j < N; j++) {
+			A[imax][j] = B[imax][j] * cos(fi) + B[jmax][j] * sin(fi);
+			A[jmax][j] = B[jmax][j] * cos(fi) - B[imax][j] * sin(fi);
+		}
+
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < N; j++) {
+				if (i != imax && i != jmax) {
+					A[i][j] = B[i][j];
+				}
+			}
+		}
+	}
+
+	for (int i = 0; i < N; i++) {
+		x[i] = A[i][i];
+	}
 }
 
 
 void kirdyushkindv::lab9()
 {
+double eps = 1e-3;
+	double* yPrev = new double[N];
+	double* yNext = new double[N];
+	double y0 = 0;
+	double y1 = 0;
+	double lambdaPrev = 0;
+	double lambdaNext = 0;
+	double delta = 0;
 
+	for (int i = 0; i < N; i++){
+		yPrev[i] = 1;
+		yNext[i] = 0;
+	}
+
+	for (int i = 0; i < N; i++){
+		for (int j = 0; j < N; j++){
+			yNext[i] += A[i][j] * yPrev[j];
+		}
+	}
+
+	y0 = yPrev[0];
+
+	for (int i = 0; i < N; i++){
+		if (yNext[i] != 0){
+			y1 = yNext[i];
+			break;
+		}
+	}
+
+	lambdaPrev = y1 / y0;
+	delta = lambdaPrev;
+
+	while (delta > eps){
+		for (int i = 0; i < N; i++){
+			yPrev[i] = yNext[i];
+			yNext[i] = 0;
+		}
+
+		for (int i = 0; i < N; i++){
+			for (int j = 0; j < N; j++){
+				yNext[i] += A[i][j] * yPrev[j];
+			}
+		}
+
+		for (int i = 0; i < N; i++){
+			if ((yNext[i] != 0) && (yPrev[i] != 0)){
+				y0 = yPrev[i];
+				y1 = yNext[i];
+				break;
+			}
+		}
+
+		lambdaNext = y1 / y0;
+		delta = fabs(lambdaNext - lambdaPrev);
+		lambdaPrev = lambdaNext;
+	}
+	cout << "Max self value: " << lambdaNext << endl;
+	delete[]yPrev;
+	delete[]yNext;
 }
 
 

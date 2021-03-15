@@ -232,19 +232,152 @@ void loginovvv::lab6()
  */
 void loginovvv::lab7()
 {
+	const double eps = 1e-21;
+	double *r = new double[N];
+	double *z = new double[N];
+	double *Az = new double[N];
+	double alfa, betta, tmp, norma, b_norm=0;
 
+	for(int i=0; i<N; i++){
+		b_norm += b[i]*b[i]; 
+		r[i] = b[i];
+		for(int j=0; j<N; j++)
+			r[i]-=A[i][j]*x[j];
+		z[i]=r[i];
+	}
+
+	do{
+		for(int i=0; i<N; i++){
+			Az[i]=0;
+			for(int j=0; j<N; j++)
+				Az[i]+=A[i][j]*z[j];
+		}
+		alfa=0; tmp=0;
+		for(int i=0; i<N; i++){
+			alfa+=r[i]*r[i];
+			tmp+=Az[i]*r[i];
+		}
+		alfa/=tmp;
+
+		betta=0; tmp=0;
+    	for(int i=0; i<N; i++){
+			tmp+=r[i]*r[i];
+			x[i]+=alfa*z[i];
+			r[i]-=alfa*Az[i];
+			betta+=r[i]*r[i];
+		}
+		norma=sqrt(betta/b_norm);
+		betta/=tmp;
+		
+		for(int i=0; i<N; i++)
+			z[i]=r[i]+betta*z[i];
+	}while(norma>eps);
 }
 
 
 void loginovvv::lab8()
 {
+	double err = 0;
+	double** C = new double*[N];
+	double eps = 1e-20;
+
+	for (int i = 0; i < N; i++){
+		C[i] = new double[N];
+	}
+
+
+	for (int i = 0; i < N; i++){
+		for (int j = i+1; j < N; j++){
+    		if(i!=j){ 
+      			err+=A[i][j]* A[i][j];
+   			}
+    		C[i][j] = 0;
+  		}
+	}
+
+	while (sqrt(err) > eps){
+		int mI = 0, mJ = 1;
+		for (int i = 0; i < N; i++)
+			for (int j = i+1; j<N; j++)
+				if ( abs(A[i][j]) > abs(A[mI][mJ]) ){
+  	    			mI = i; mJ = j;	
+		}
+
+	double phi;
+  	if(A[mI][mI]!= A[mJ][mJ]){
+    	phi = 0.5*atan(2*A[mI][mJ]/(A[mI][mI] - A[mJ][mJ]));
+ 	}else{phi = M_PI/4;}
+	double c = cos(phi), s = sin(phi);
+ 
+	C[mI][mI] = pow(c, 2)*A[mI][mI] - 2*s*c*A[mI][mJ] + pow(s, 2)*A[mJ][mJ];
+	C[mJ][mJ] = pow(s, 2)*A[mI][mI] + 2*s*c*A[mI][mJ] + pow(c, 2)*A[mJ][mJ];
+	C[mI][mJ] = (pow(c, 2) - pow(s, 2))*A[mI][mJ] + s*c*(A[mJ][mJ] - A[mI][mI]);
+	C[mJ][mI] = C[mI][mJ];
+	
+	for (int k = 0; k < N; k++){
+		if (k != mI  &&  k != mJ){
+	  	C[mI][k] = c*A[mI][k] - s*c*A[mJ][k];
+	  	C[k][mI] = C[mI][k];
+	  	C[mJ][k] = s*A[mI][k] + c*A[mJ][k];
+	  	C[k][mJ] = C[mJ][k];
+	} 
+		for (int l = 0; l < N; l++)
+	    	if (k != mI && k != mJ && l != mI && l != mJ) 
+				C[k][l] = A[k][l];	  
+	}
+	
+	err = 0;
+	for (int i = 0; i < N; i++)
+      for (int j = i+1; j < N; j++)
+  	    if (i != j) 
+			err += C[i][j] * C[i][j]; 
+
+	for (int i = 0; i < N; i++)
+      for (int j = 0; j < N; j++) 
+	  	A[i][j] = C[i][j]; 
+
+  }
+  
+  	for (int i = 0; i < N; i++) 
+  		x[i] = A[i][i];
 
 }
 
 
+
 void loginovvv::lab9()
 {
+	double eps = 1.0e-3;
+	double *y = new double[N];
+    double *y_next = new double[N];
+    double l = 0, l_next = 1;
+    
 
+    for (int i=0; i<N; i++)
+  		y[i]=1;
+  
+    while(fabs(l_next - l) > eps){
+  		l = l_next;
+  	
+		for(int i=0; i<N; i++){
+	    	double s = 0;
+        	for(int j=0; j<N; j++){
+        		s += A[i][j]*y[j];
+        	}
+	    y_next[i]=s;
+    	}
+    
+		for (int i=0; i<N; i++){
+			if (y_next[0] != 0 && y[0] != 0){
+				l_next = y_next[i]/y[i];
+			}
+		}
+	
+		for (int i=0; i<N; i++)
+			y[i]=y_next[i];
+   	
+    }
+    cout<<"RESULT: " << l_next << endl;
 }
 
 

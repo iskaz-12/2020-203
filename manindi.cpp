@@ -287,19 +287,201 @@ void manindi::lab6()
  */
 void manindi::lab7()
 {
+const double eps = 1e-18;
+double *xPrev = new double[N];
 
+	memset(xPrev, 0, sizeof(double) * N);
+
+double *r = new double[N];
+
+	for (int i = 0; i < N; i++)
+		r[i] = -b[i];
+double *Ar = new double[N];
+	
+	memset(Ar, 0, sizeof(double) * N);
+
+	for (int i = 0; i < N; i++) 
+
+		for (int j = 0; j < N; j++)
+			Ar[i] += A[i][j] * r[j];
+
+double rrScalar = 0;
+
+	for (int i = 0; i < N; i++)
+		rrScalar += r[i] * r[i];
+
+double rArScalar = 0;
+
+	for (int i = 0; i < N; i++)
+		rArScalar += Ar[i] * r[i];
+
+double alpha = 1;
+double tau = rrScalar / rArScalar;
+
+	for (int i = 0; i < N; i++)
+		x[i] = tau * b[i];
+
+	for (int i = 0; i < N; i++) 
+
+		for (int j = 0; j < N; j++)
+			r[i] += A[i][j] * x[j];
+
+rrScalar = 0;
+
+	for (int i = 0; i < N; i++)
+		rrScalar += r[i] * r[i];
+
+	while (rrScalar > eps * eps)
+	{
+double rArScalarPrev = rArScalar;
+
+memset(Ar, 0, sizeof(double) * N);
+
+	for (int i = 0; i < N; i++) 
+
+		for (int j = 0; j < N; j++)
+			Ar[i] += A[i][j] * r[j];
+rArScalar = 0;
+
+	for (int i = 0; i < N; i++)
+		rArScalar += Ar[i] * r[i];
+
+double tauPrev = tau;
+tau = rrScalar / rArScalar;
+alpha = 1.0 / (1 - tau / tauPrev / alpha * rrScalar / rArScalarPrev);
+
+	for (int i = 0; i < N; i++)
+	{
+double tmp = x[i];
+x[i] = alpha * x[i] + (1 - alpha) * xPrev[i] - tau * alpha * r[i];
+xPrev[i] = tmp;
+
+	}
+
+	for (int i = 0; i < N; i++)
+		r[i] = -b[i];
+
+	for (int i = 0; i < N; i++) 
+	
+		for (int j = 0; j < N; j++)
+			r[i] += A[i][j] * x[j];
+
+		rrScalar = 0;
+	
+	for (int i = 0; i < N; i++)
+		rrScalar += r[i] * r[i];
+
+	}
+
+delete []xPrev;
+
+delete []r;
+
+delete []Ar;
 }
 
 
 void manindi::lab8()
 {
+double eps = 1e-20;
+double** H = new double* [N];
 
+	for (int i = 0; i < N; i++) {
+	H[i] = new double[N];
+	}
+
+	while (true) {
+	double n = 0;
+	int i_max = 0;
+	int j_max = 1;
+		for (int i = 0; i < N; i++) {
+			for (int j = i + 1; j < N; j++) {
+			if (abs(A[i][j]) > abs(A[i_max][j_max])) {
+			i_max = i;
+			j_max = j;
+			}
+		n += A[i][j] * A[i][j];
+		}
+	}
+
+	if (sqrt(n) < eps) {
+
+	break;
+
+	}
+
+double fi = 0.5 * atan(2 * A[i_max][j_max] / (A[i_max][i_max] - A[j_max][j_max]));
+
+	for (int i = 0; i < N; i++) {
+		H[i][i_max] = A[i][i_max] * cos(fi) + A[i][j_max] * sin(fi);
+		H[i][j_max] = A[i][j_max] * cos(fi) - A[i][i_max] * sin(fi);
+	}
+	for (int i = 0; i < N; i++) {
+		for (int j = 0; j < N; j++) {
+		if (j != i_max && j != j_max) {
+		H[i][j] = A[i][j];
+				}
+		}
+	}
+
+	for (int j = 0; j < N; j++) {
+		A[i_max][j] = H[i_max][j] * cos(fi) + H[j_max][j] * sin(fi);
+		A[j_max][j] = H[j_max][j] * cos(fi) - H[i_max][j] * sin(fi);
+		}
+
+	for (int i = 0; i < N; i++) {
+		for (int j = 0; j < N; j++) {
+		if (i != i_max && i != j_max) {
+		A[i][j] = H[i][j];
+			}
+		}
+		}
+	}
+
+	for (int i = 0; i < N; i++) {
+		x[i] = A[i][i];
+	}
 }
 
 
 void manindi::lab9()
 {
+double eps = 1e-3; 
+double *y = new double[N];
+double *yNext = new double[N]; 
 
+	for (int i = 0; i < N; i++){
+	y[i] = 1; 
+	}
+double delta = 0; 
+double maxLambda = 0; 
+
+	do{
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < N; j++) {
+			yNext[i] += A[i][j] * y[j]; 
+			}
+		}
+double lambda;
+	for (int i = 0; i < N; i++){
+	if(fabs(y[i]) > eps && fabs(yNext[i]) > eps){
+	lambda = yNext[i]/y[i];
+
+	break;
+		}
+	} 
+delta = fabs(lambda - maxLambda); 
+maxLambda = lambda; 
+		
+	for (int i = 0; i < N; i++) {
+	y[i] = yNext[i]; 
+	}
+	
+	memset(yNext, 0, sizeof(double) * N);
+	
+	}while(delta > eps);
+
+	cout << "maxLambda = " << maxLambda << endl;
 }
 
 
